@@ -32,7 +32,7 @@ class PacmanAgent(Agent):
         Arguments:
             state: a game state. See API or class `pacman.GameState`.
 
-        Returns:
+        Return:
             A legal move as defined in `game.Directions`.
         """
 
