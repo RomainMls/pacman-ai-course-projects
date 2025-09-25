@@ -1,5 +1,5 @@
 from pacman_module.game import Agent, Directions
-from pacman_module.util import Stack
+from pacman_module.util import Queue
 
 
 def key(state):
@@ -38,14 +38,14 @@ class PacmanAgent(Agent):
         """
 
         if self.moves is None:
-            self.moves = self.dfs(state)
+            self.moves = self.bfs(state)
 
         if self.moves:
             return self.moves.pop(0)
         else:
             return Directions.STOP
 
-    def dfs(self, state):
+    def bfs(self, state):
         """Given a Pacman game state, returns a list of legal moves to solve
         the search layout.
 
@@ -57,7 +57,7 @@ class PacmanAgent(Agent):
         """
 
         path = []
-        fringe = Stack()
+        fringe = Queue()
         fringe.push((state, path))
         closed = set()
 
