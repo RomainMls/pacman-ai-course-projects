@@ -29,10 +29,7 @@ def h(n):
     for i in range(matrix.width):
         for j in range(matrix.height):
             if matrix[i][j]:
-                # under-estimate the cost of going there (the higher, the better)
-                cost = 0
-                cost += sqrt((pacman_pos[0] - i) ** 2 + (pacman_pos[1] - j) ** 2) # each step is +1
-                counter += cost
+                counter += sqrt((pacman_pos[0] - i) ** 2 + (pacman_pos[1] - j) ** 2) # each step is +1
 
     return counter
 
