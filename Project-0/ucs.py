@@ -22,18 +22,6 @@ def key(state):
 def g(n):
     return -n.getScore()
 
-def h(n):
-    pacman_pos = n.getPacmanPosition()
-    matrix = n.getFood()
-    counter = 0
-    for i in range(matrix.width):
-        for j in range(matrix.height):
-            if matrix[i][j]:
-                counter -= 10 # each food is +10 point
-                counter += abs(pacman_pos[0] - i) + abs(pacman_pos[1] - j) # each step is -1
-                
-    return counter
-
 class PacmanAgent(Agent):
     """Pacman agent based on depth-first search (DFS)."""
 
@@ -73,7 +61,7 @@ class PacmanAgent(Agent):
 
         path = []
         fringe = PriorityQueue()
-        fringe.push((state, path), 0)
+        fringe.push((state, path), g(state))
         closed = set()
 
         while True:
@@ -93,6 +81,6 @@ class PacmanAgent(Agent):
                 closed.add(current_key)
 
             for successor, action in current.generatePacmanSuccessors():
-                fringe.push((successor, path + [action]), g(successor)+h(successor))
+                fringe.push((successor, path + [action]), g(successor))
 
         return path
