@@ -28,12 +28,12 @@ def h(n):
     counter = 0
     for i in range(matrix.width):
         for j in range(matrix.height):
-            if matrix[i][j] == 'T':
+            if matrix[i][j]:
                 # under-estimate the cost of going there (the higher, the better)
-                cost = 10   # reaching that dot guaranties 10 points
-                cost += ((pacman_pos[0] - i) ** 2 + (pacman_pos[1] - j) ** 2) # each step is
+                cost = 10   # reaching is +10
+                cost += ((pacman_pos[0] - i) ** 2 + (pacman_pos[1] - j) ** 2) # each step is +1
                 if n.getNumFood() == 1:
-                    cost += 500     # If it's the last dot, then reaching it will lead to a winning end (+500)
+                    cost += 500     # a winning end is +500
 
                 counter += cost
 
