@@ -1,5 +1,5 @@
 from pacman_module.game import Agent, Directions
-from pacman_module.util import PriorityQueue
+from pacman_module.util import Queue
 
 
 def key(state):
@@ -57,7 +57,7 @@ class PacmanAgent(Agent):
         """
 
         path = []
-        fringe = PriorityQueue()
+        fringe = Queue()
         fringe.push((state, path), -state.getScore())
         closed = set()
 
