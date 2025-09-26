@@ -30,11 +30,8 @@ def h(n):
         for j in range(matrix.height):
             if matrix[i][j]:
                 # under-estimate the cost of going there (the higher, the better)
-                cost = 10   # reaching is +10
-                cost += ((pacman_pos[0] - i) ** 2 + (pacman_pos[1] - j) ** 2) # each step is +1
-                if n.getNumFood() == 1:
-                    cost += 500     # a winning end is +500
-
+                cost = 0
+                cost += sqrt((pacman_pos[0] - i) ** 2 + (pacman_pos[1] - j) ** 2) # each step is +1
                 counter += cost
 
     return counter
