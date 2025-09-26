@@ -1,5 +1,5 @@
 from pacman_module.game import Agent, Directions
-from pacman_module.util import Queue
+from pacman_module.util import PriorityQueue
 
 
 def key(state):
@@ -57,15 +57,15 @@ class PacmanAgent(Agent):
         """
 
         path = []
-        fringe = Queue()
-        fringe.push((state, path))
+        fringe = PriorityQueue()
+        fringe.push((state, path), -state.getScore())
         closed = set()
 
         while True:
             if fringe.isEmpty():
                 return []
 
-            current, path = fringe.pop()
+            prioritym, (current, path) = fringe.pop()
 
             if current.isWin():
                 return path
@@ -78,6 +78,6 @@ class PacmanAgent(Agent):
                 closed.add(current_key)
 
             for successor, action in current.generatePacmanSuccessors():
-                fringe.push((successor, path + [action]))
+                fringe.push((successor, path + [action]), -successor.getScore())
 
         return path
