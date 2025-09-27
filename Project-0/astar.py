@@ -26,16 +26,42 @@ def g(prev_cost, prev, next):
     return cost
 
 def h(n):
+    if n.getNumFood() == 0:
+        return 0
+
     pacman_pos = n.getPacmanPosition()
     matrix = n.getFood()
-    counter = 0
+
+    mostleft = pacman_pos[0]
+    mostright = pacman_pos[0]
+    mostup = pacman_pos[1]
+    mostdown = pacman_pos[1]
     for i in range(matrix.width):
         for j in range(matrix.height):
             if matrix[i][j]:
-                counter -= 10 # each food is +10 point
-                counter += abs(pacman_pos[0] - i) + abs(pacman_pos[1] - j) # each step is -1
-                
-    return counter
+                if i < mostleft:
+                    mostleft = i
+                if i > mostright:
+                    mostright = i
+                if j < mostup:
+                    mostup = j
+                if j > mostdown:
+                    mostdown = j
+
+    leftDistance = pacman_pos[0] - mostleft
+    rightDistance = mostright - pacman_pos[0]
+    upDistance = pacman_pos[1] - mostup
+    downDistance = mostdown - pacman_pos[1]
+    if leftDistance < rightDistance:
+        horizontalDistance = 2 * leftDistance + rightDistance
+    else:
+        horizontalDistance = 2 * rightDistance + leftDistance
+    if upDistance < downDistance:
+        verticalDistance = 2 * upDistance + downDistance
+    else:
+        verticalDistance = 2 * downDistance + leftDistance
+
+    return verticalDistance + horizontalDistance
 
 class PacmanAgent(Agent):
     """Pacman agent based on A*."""
@@ -76,7 +102,7 @@ class PacmanAgent(Agent):
 
         path = []
         fringe = PriorityQueue()
-        fringe.push((state, path), 0)
+        fringe.push((state, path), h(state))
         closed = set()
 
         while True:
