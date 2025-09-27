@@ -1,6 +1,5 @@
 from pacman_module.game import Agent, Directions
 from pacman_module.util import PriorityQueue
-from math import sqrt
 
 
 def key(state):
@@ -19,8 +18,12 @@ def key(state):
         tuple(state.getCapsules())
     )
 
-def g(n):
-    return -n.getScore()
+
+def g(prev_cost, prev, next):
+    cost = prev_cost
+    cost += 1 # 1 point per step
+    cost += (len(prev.getCapsules()) - len(next.getCapsules())) * 5 # 5 points per capsule eaten
+    return cost
 
 def h(n):
     pacman_pos = n.getPacmanPosition()
@@ -35,7 +38,7 @@ def h(n):
     return counter
 
 class PacmanAgent(Agent):
-    """Pacman agent based on depth-first search (DFS)."""
+    """Pacman agent based on A*."""
 
     def __init__(self):
         super().__init__()
@@ -80,7 +83,7 @@ class PacmanAgent(Agent):
             if fringe.isEmpty():
                 return []
 
-            priority, (current, path) = fringe.pop()
+            current_cost, (current, path) = fringe.pop()
 
             if current.isWin():
                 return path
@@ -93,6 +96,6 @@ class PacmanAgent(Agent):
                 closed.add(current_key)
 
             for successor, action in current.generatePacmanSuccessors():
-                fringe.push((successor, path + [action]), g(successor)+h(successor))
+                fringe.push((successor, path + [action]), g(current_cost, current, successor)+h(successor))
 
         return path

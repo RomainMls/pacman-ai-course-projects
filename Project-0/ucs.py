@@ -1,6 +1,5 @@
 from pacman_module.game import Agent, Directions
 from pacman_module.util import PriorityQueue
-from math import sqrt
 
 
 def key(state):
@@ -17,13 +16,18 @@ def key(state):
         state.getPacmanPosition(),
         state.getFood(),
         tuple(state.getCapsules())
-    )
+   )
 
-def g(n):
-    return -n.getScore()
+
+def g(prev_cost, prev, next):
+    cost = prev_cost
+    cost += 1 # 1 point per step
+    cost += (len(prev.getCapsules()) - len(next.getCapsules())) * 5 # 5 points per capsule eaten
+    return cost
+
 
 class PacmanAgent(Agent):
-    """Pacman agent based on depth-first search (DFS)."""
+    """Pacman agent based on Uniform-cost search (UCS)."""
 
     def __init__(self):
         super().__init__()
@@ -41,14 +45,14 @@ class PacmanAgent(Agent):
         """
 
         if self.moves is None:
-            self.moves = self.astar(state)
+            self.moves = self.ucs(state)
 
         if self.moves:
             return self.moves.pop(0)
         else:
             return Directions.STOP
 
-    def astar(self, state):
+    def ucs(self, state):
         """Given a Pacman game state, returns a list of legal moves to solve
         the search layout.
 
@@ -61,14 +65,14 @@ class PacmanAgent(Agent):
 
         path = []
         fringe = PriorityQueue()
-        fringe.push((state, path), g(state))
+        fringe.push((state, path), 0)
         closed = set()
 
         while True:
             if fringe.isEmpty():
                 return []
 
-            priority, (current, path) = fringe.pop()
+            current_cost, (current, path) = fringe.pop()
 
             if current.isWin():
                 return path
@@ -81,6 +85,6 @@ class PacmanAgent(Agent):
                 closed.add(current_key)
 
             for successor, action in current.generatePacmanSuccessors():
-                fringe.push((successor, path + [action]), g(successor))
+                fringe.push((successor, path + [action]), g(current_cost, current, successor))
 
         return path
