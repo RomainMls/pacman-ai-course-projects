@@ -1,12 +1,8 @@
-import numpy as np
 import math
-from pacman_module.game import Agent, Directions, manhattanDistance
+import numpy as np
 
-from typing import Tuple, List
-from pacman_module.game import Grid
-from pacman_module.game import Actions
+from pacman_module.game import Actions, Agent, Directions, manhattanDistance
 
-#J'ai ajouté les types dans les arguments des fonctions pour mieux s'y retrouver
 class BeliefStateAgent(Agent):
     """Belief state agent.
 
@@ -19,7 +15,7 @@ class BeliefStateAgent(Agent):
 
         self.ghost = ghost
 
-    def transition_matrix(self, walls: Grid, position: Tuple[int, int]):
+    def transition_matrix(self, walls, position):
         """Builds the transition matrix
 
             T_t = P(X_t | X_{t-1})
@@ -36,30 +32,32 @@ class BeliefStateAgent(Agent):
             the ghost to move from (i, j) to (k, l).
         """
 
-        W = walls.width
-        H = walls.height
-        T = np.zeros((W, H, W,  H))
         # L'idée est simple, on va pour chaque position (i, j) regarder les déplacements possibles du fantome (k, l):
         # il a plus de chance de s'éloigner de pacman vu qu'il veut le fuir 
         # donc on utilise des poids pour donner de plus grandes proba si le déplacement en (k, l) à partir de (i, j) éloigne le fantome de pacman
         # on normalise pour obtenir une proba
-        for i in range(0, W):
-            for j in range(0, H):
-                if(walls[i][j] == True):
+        
+        w = walls.width
+        h = walls.height
+        t = np.zeros((w, h, w,  h))
+        
+        for i in range(w):
+            for j in range(h):
+                if walls[i][j]:
                     continue
 
                 neighbors = Actions.getLegalNeighbors((i, j), walls)
-                if(len(neighbors) == 0):
+                if len(neighbors) == 0:
                     continue
                 distance1 = manhattanDistance((i, j), position)
                 weights = []
                 Z = 0
                 
-                for (k, l) in neighbors:
+                for k, l in neighbors:
                     distance2 = manhattanDistance((k, l), position)
-                    #Plus la peur est grande, plus on favorise l'éloignement de pacman
+                    # Plus la peur est grande, plus on favorise l'éloignement de pacman
                     if self.ghost == "fearless":
-                        w =  1
+                        w = 1
                     elif self.ghost == "afraid":
                         if distance1 < distance2:
                             w = 2
@@ -67,17 +65,17 @@ class BeliefStateAgent(Agent):
                             w = 1
                     elif self.ghost == "terrified":
                         if distance1 < distance2:
-                            w  = 6
+                            w = 6
                         else:   
                             w = 1
                     weights.append((k, l, w))
                     Z += w
                     
-                for (k, l, w) in weights:
-                    T[i][j][k][l] = w / Z
-        return T
+                for k, l, w in weights:
+                    t[i][j][k][l] = w / Z
+        return t
 
-    def observation_matrix(self, walls: Grid, evidence: float, position: Tuple[int, int]):
+    def observation_matrix(self, walls, evidence, position):
         """Builds the observation matrix
 
             O_t = P(e_t | X_t)
@@ -94,32 +92,42 @@ class BeliefStateAgent(Agent):
             The W x H observation matrix O_t.
         """
         
-        # Le principe ici est que plus l'evidence observée est proche de la distance réelle entre fantome (i, j) et Pacman, 
+        # Le principe ici est que plus l'evidence observée est proche de la
+        # distance réelle entre fantome (i, j) et Pacman, 
         # plus z est proche de np (sa moyenne)
         # Or, la proba P(z) d'une loi bin est max autour de la moyenne
-        # donc plus z proche de np, plus P(z) (et donc P(evidence | distance)) est élevée
-        # P(e_t | X_t) doit être max quand e_t = vrai distance(X_t) c'est bien ce qu'on obtient
+        # Donc plus z proche de np, 
+        #      plus P(z) (et donc P(evidence | distance)) est élevée
+        # P(e_t | X_t) doit être max quand e_t = vrai distance(X_t)
+        # C'est bien ce qu'on obtient
+        
         n = 4
         p = 0.5
-        W = walls.width
-        H = walls.height
-        O = np.zeros((W, H))
-        for i in range (0, W):
-            for j in range (0, H):
-                if(walls[i][j] == True):
+        w = walls.width
+        h = walls.height
+        o = np.zeros((w, h))
+        
+        for i in range(w):
+            for j in range(h):
+                if walls[i][j]:
                     continue
+                
                 distance = manhattanDistance((i, j), position)
                 
-                # On peut calculer z en l'isolant, par précaution entier car le combinatoire n'accepte que des entiers
+                # On peut calculer z en l'isolant, 
+                # par précaution entier car le combinatoire n'accepte que des entiers
                 z = int(evidence - distance + n * p)
-                if(z <= n and z >= 0):
-                    O[i][j] = math.comb(n, z) * (p ** z) * ((1 - p) ** (n-z)) # Proba d'avoir P(Z=z)
 
-        O /= np.sum(O) # Normalisation pour que la somme de la matrice égale 1
-        return O
+                if 0 <= z <= n:
+                    # Proba d'avoir P(Z=z)
+                    o[i][j] = math.comb(n, z) * (p ** z) * ((1 - p) ** (n - z))
+
+        # Normalisation pour que la somme de la matrice égale 1
+        o /= np.sum(o)
+        return o
                 
 
-    def update(self, walls: Grid, belief: np.ndarray, evidence: float, position: Tuple[int, int]):
+    def update(self, walls, belief, evidence, position):
         """Updates the previous ghost belief state
 
             b_{t-1} = P(X_{t-1} | e_{1:t-1})
@@ -137,46 +145,46 @@ class BeliefStateAgent(Agent):
             The updated ghost belief state b_t as a W x H matrix.
         """
 
-        T = self.transition_matrix(walls, position)
-        O = self.observation_matrix(walls, evidence, position)
+        t = self.transition_matrix(walls, position)
+        o = self.observation_matrix(walls, evidence, position)
         
-        W = walls.width
-        H = walls.height
+        w = walls.width
+        h = walls.height
 
         # Initialisation uniforme si aucune croyance
-        if(belief is None):
-            nbCases = 0
-            belief = np.zeros((W, H))
-            for i in range(0, W):
-                for j in range(0, H):
-                    if(walls[i][j] == True):
+        if belief is None:
+            nb_cases = 0
+            belief = np.zeros((w, h))
+            for i in range(w):
+                for j in range(h):
+                    if walls[i][j]:
                         belief[i][j] = 0
                     else:
-                        nbCases += 1
-            for i in range(0, W):
-                for j in range(0, H):
-                    if(walls[i][j] == False):
-                        belief[i][j] = 1/nbCases
+                        nb_cases += 1
+            for i in range(w):
+                for j in range(h):
+                    if not walls[i][j]:
+                        belief[i][j] = 1 / nb_cases
                         
         # 1.Prediction
-        prediction = np.zeros((W, H))
-        for k in range(0, W):
-            for l in range(0, H):
+        prediction = np.zeros((w, h))
+        for k in range(w):
+            for l in range(h):
 
                 # On calcule la croyance prédite prediction(k, l) = 
                 # somme sur tous les couples (i, j) [P(X_t=(k,l) | X_{t-1}=(i,j)) * b_{t-1}(i, j)]
                 # (Slide prediction)
-                totalProb = 0
-                for i in range(0, W):
-                    for j in range(0, H):
-                        totalProb += T[i][j][k][l] * belief[i][j]             
-                prediction[k][l] = totalProb
+                total_prob = 0
+                for i in range(w):
+                    for j in range(h):
+                        total_prob += t[i][j][k][l] * belief[i][j]             
+                prediction[k][l] = total_prob
         
         # 2.Correction (slide bayes filter)
-        b_t = np.zeros((W, H))
-        for k in range(0, W):
-            for l in range(0, H):
-                b_t[k][l] = O[k][l] * prediction[k][l]
+        b_t = np.zeros((w, h))
+        for k in range(w):
+            for l in range(h):
+                b_t[k][l] = o[k][l] * prediction[k][l]
         
         b_t /= np.sum(b_t)
         return b_t
@@ -222,7 +230,7 @@ class PacmanAgent(Agent):
     def __init__(self):
         super().__init__()
 
-    def _get_action(self, walls: Grid, beliefs: List[np.ndarray], eaten: List[bool], position: Tuple[int, int]):
+    def _get_action(self, walls, beliefs, eaten, position):
         """
         Arguments:
             walls: The W x H grid of walls.
@@ -235,47 +243,49 @@ class PacmanAgent(Agent):
         """
         W = walls.width
         H = walls.height
-        closestGhost = [None, math.inf, None] #Ghost ID, distance between it and pacman, index of ghost's position
-        ghostIDCounter = 0
-        for belief in beliefs:
-            if(eaten[ghostIDCounter]):
-                ghostIDCounter += 1
-                continue
-            maxProba = 0
-            GhostPosition = (0, 0)
-            for i in range(0, W):
-                for j in range(0, H):
-                    if(belief[i][j] > maxProba):
-                        maxProba = belief[i][j]
-                        GhostPosition = (i, j)
-                        
-            distance = manhattanDistance(GhostPosition, position)
-            if(distance < closestGhost[1]):
-                closestGhost[0] = ghostIDCounter
-                closestGhost[1] = distance
-                closestGhost[2] = GhostPosition
-            ghostIDCounter += 1
+        closest_ghost = [None, math.inf, None] # Ghost ID, distance, position
+        ghost_id_counter = 0
         
-        legalMoves = Actions.getLegalNeighbors(position, walls)
+        for belief in beliefs:
+            if eaten[ghost_id_counter]:
+                ghost_id_counter += 1
+                continue
+            max_proba = 0
+            ghost_position = (0, 0)
+            
+            for i in range(W):
+                for j in range(H):
+                    if belief[i][j] > max_proba:
+                        max_proba = belief[i][j]
+                        ghost_position = (i, j)
+                        
+            distance = manhattanDistance(ghost_position, position)
+            if distance < closest_ghost[1]:
+                closest_ghost[0] = ghost_id_counter
+                closest_ghost[1] = distance
+                closest_ghost[2] = ghost_position
+            ghost_id_counter += 1
+        
+        legal_moves = Actions.getLegalNeighbors(position, walls)
 
-        distanceBefore = math.inf
+        distance_before = math.inf
         next_pos = ()
-        if(not legalMoves):
+        if not legal_moves:
             return Directions.STOP
         
-        for legalMove in legalMoves:
-            distance = manhattanDistance(closestGhost[2], legalMove)
-            if(distance < distanceBefore):
-                next_pos = legalMove
-                distanceBefore = distance
+        for legal_move in legal_moves:
+            distance = manhattanDistance(closest_ghost[2], legal_move)
+            if distance < distance_before:
+                next_pos = legal_move
+                distance_before = distance
             
-        if(next_pos[0] > position[0]):
+        if next_pos[0] > position[0]:
             return Directions.EAST
-        if(next_pos[0] < position[0]):
+        if next_pos[0] < position[0]:
             return Directions.WEST
-        if(next_pos[1] < position[1]):
+        if next_pos[1] < position[1]:
             return Directions.SOUTH
-        if(next_pos[1] > position[1]):
+        if next_pos[1] > position[1]:
             return Directions.NORTH
         else:
             return Directions.STOP            
