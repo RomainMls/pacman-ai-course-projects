@@ -300,38 +300,33 @@ class PacmanAgent(Agent):
             return Directions.STOP
 
         best_moves = []
-        min_dist = float('inf')
+        min_dist = math.inf
         target = closest_ghost[2]
 
-        for move in legal_moves:
-            dist = self.get_distance(walls, move, target)
-            if dist is not None:
-                if dist < min_dist:
-                    min_dist = dist
-                    best_moves = [move]
-                elif dist == min_dist:
-                    best_moves.append(move)
+        for legal_move in legal_moves:
+            distance = self.get_distance(walls, legal_move, target)
+            if distance is not None:
+                if distance < min_dist:
+                    min_dist = distance
+                    best_moves = [legal_move]
+                elif distance == min_dist:
+                    best_moves.append(legal_move)
 
         if not best_moves:
             return random.choice(legal_moves)
 
-        if random.random() < 0.05:
-            return random.choice(legal_moves)
-        else:
-            next_pos = random.choice(best_moves)
+        next_pos = random.choice(best_moves)
 
-        x, y = position
-        nx, ny = next_pos
-
-        if nx > x:
+        if next_pos[0] > position[0]:
             return Directions.EAST
-        if nx < x:
+        if next_pos[0] < position[0]:
             return Directions.WEST
-        if ny > y:
-            return Directions.NORTH
-        if ny < y:
+        if next_pos[1] < position[1]:
             return Directions.SOUTH
-        return Directions.STOP
+        if next_pos[1] > position[1]:
+            return Directions.NORTH
+        else:
+            return Directions.STOP
 
 
     def get_action(self, state):
