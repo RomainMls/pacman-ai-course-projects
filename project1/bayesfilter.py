@@ -1,4 +1,6 @@
 import math
+import random
+
 import numpy as np
 
 from pacman_module.game import Actions, Agent, Directions, manhattanDistance
@@ -285,7 +287,7 @@ class PacmanAgent(Agent):
                         max_proba = belief[i][j]
                         ghost_position = (i, j)
                         
-            distance = manhattanDistance(ghost_position, position)
+            distance = self.get_distance(walls, ghost_position, position)
             if distance < closest_ghost[1]:
                 closest_ghost[0] = ghost_id_counter
                 closest_ghost[1] = distance
@@ -294,27 +296,43 @@ class PacmanAgent(Agent):
         
         legal_moves = Actions.getLegalNeighbors(position, walls)
 
-        distance_before = math.inf
-        next_pos = ()
         if not legal_moves:
             return Directions.STOP
-        
-        for legal_move in legal_moves:
-            distance = manhattanDistance(closest_ghost[2], legal_move)
-            if distance < distance_before:
-                next_pos = legal_move
-                distance_before = distance
-            
-        if next_pos[0] > position[0]:
-            return Directions.EAST
-        if next_pos[0] < position[0]:
-            return Directions.WEST
-        if next_pos[1] < position[1]:
-            return Directions.SOUTH
-        if next_pos[1] > position[1]:
-            return Directions.NORTH
+
+        best_moves = []
+        min_dist = float('inf')
+        target = closest_ghost[2]
+
+        for move in legal_moves:
+            dist = self.get_distance(walls, move, target)
+            if dist is not None:
+                if dist < min_dist:
+                    min_dist = dist
+                    best_moves = [move]
+                elif dist == min_dist:
+                    best_moves.append(move)
+
+        if not best_moves:
+            return random.choice(legal_moves)
+
+        if random.random() < 0.05:
+            return random.choice(legal_moves)
         else:
-            return Directions.STOP            
+            next_pos = random.choice(best_moves)
+
+        x, y = position
+        nx, ny = next_pos
+
+        if nx > x:
+            return Directions.EAST
+        if nx < x:
+            return Directions.WEST
+        if ny > y:
+            return Directions.NORTH
+        if ny < y:
+            return Directions.SOUTH
+        return Directions.STOP
+
 
     def get_action(self, state):
         """Given a Pacman game state, returns a legal move.
