@@ -2,6 +2,8 @@ import math
 import numpy as np
 
 from pacman_module.game import Actions, Agent, Directions, manhattanDistance
+from pacman_module.util import Queue
+
 
 class BeliefStateAgent(Agent):
     """Belief state agent.
@@ -229,6 +231,30 @@ class PacmanAgent(Agent):
 
     def __init__(self):
         super().__init__()
+
+
+    def get_distance(self, walls, start, goal):
+        """Returns shortest path distance between start and goal, or None if unreachable using a bfs algorithm."""
+        if start == goal:
+            return 0
+
+        fringe = Queue()
+        fringe.push((start, 0))
+        visited = set()
+
+        while True:
+            if fringe.isEmpty():
+                return None
+
+            (x, y), dist = fringe.pop()
+            for nx, ny in Actions.getLegalNeighbors((x, y), walls):
+                if (nx, ny) == goal:
+                    return dist + 1
+                if (nx, ny) not in visited:
+                    visited.add((nx, ny))
+                    fringe.push(((nx, ny), dist + 1))
+
+
 
     def _get_action(self, walls, beliefs, eaten, position):
         """
