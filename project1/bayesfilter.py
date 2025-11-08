@@ -248,13 +248,13 @@ class PacmanAgent(Agent):
             if fringe.isEmpty():
                 return None
 
-            (x, y), dist = fringe.pop()
-            for nx, ny in Actions.getLegalNeighbors((x, y), walls):
-                if (nx, ny) == goal:
+            position, dist = fringe.pop()
+            for next_legal_pos in Actions.getLegalNeighbors(position, walls):
+                if next_legal_pos == goal:
                     return dist + 1
-                if (nx, ny) not in visited:
-                    visited.add((nx, ny))
-                    fringe.push(((nx, ny), dist + 1))
+                if next_legal_pos not in visited:
+                    visited.add(next_legal_pos)
+                    fringe.push((next_legal_pos, dist + 1))
 
 
 
