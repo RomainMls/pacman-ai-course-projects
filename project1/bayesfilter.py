@@ -1,7 +1,11 @@
 import math
+import random
+
 import numpy as np
 
 from pacman_module.game import Actions, Agent, Directions, manhattanDistance
+from pacman_module.util import Queue
+
 
 class BeliefStateAgent(Agent):
     """Belief state agent.
@@ -232,6 +236,30 @@ class PacmanAgent(Agent):
     def __init__(self):
         super().__init__()
 
+
+    def get_distance(self, walls, start, goal):
+        """Returns shortest path distance between start and goal, or None if unreachable using a bfs algorithm."""
+        if start == goal:
+            return 0
+
+        fringe = Queue()
+        fringe.push((start, 0))
+        visited = set()
+
+        while True:
+            if fringe.isEmpty():
+                return None
+
+            position, dist = fringe.pop()
+            for next_legal_pos in Actions.getLegalNeighbors(position, walls):
+                if next_legal_pos == goal:
+                    return dist + 1
+                if next_legal_pos not in visited:
+                    visited.add(next_legal_pos)
+                    fringe.push((next_legal_pos, dist + 1))
+
+
+
     def _get_action(self, walls, beliefs, eaten, position):
         """
         Arguments:
@@ -261,7 +289,7 @@ class PacmanAgent(Agent):
                         max_proba = belief[i][j]
                         ghost_position = (i, j)
                         
-            distance = manhattanDistance(ghost_position, position)
+            distance = self.get_distance(walls, ghost_position, position)
             if distance < closest_ghost[1]:
                 closest_ghost[0] = ghost_id_counter
                 closest_ghost[1] = distance
@@ -270,17 +298,27 @@ class PacmanAgent(Agent):
         
         legal_moves = Actions.getLegalNeighbors(position, walls)
 
-        distance_before = math.inf
-        next_pos = ()
         if not legal_moves:
             return Directions.STOP
-        
+
+        best_moves = []
+        min_dist = math.inf
+        target = closest_ghost[2]
+
         for legal_move in legal_moves:
-            distance = manhattanDistance(closest_ghost[2], legal_move)
-            if distance < distance_before:
-                next_pos = legal_move
-                distance_before = distance
-            
+            distance = self.get_distance(walls, legal_move, target)
+            if distance is not None:
+                if distance < min_dist:
+                    min_dist = distance
+                    best_moves = [legal_move]
+                elif distance == min_dist:
+                    best_moves.append(legal_move)
+
+        if not best_moves:
+            return random.choice(legal_moves)
+
+        next_pos = random.choice(best_moves)
+
         if next_pos[0] > position[0]:
             return Directions.EAST
         if next_pos[0] < position[0]:
@@ -290,7 +328,8 @@ class PacmanAgent(Agent):
         if next_pos[1] > position[1]:
             return Directions.NORTH
         else:
-            return Directions.STOP            
+            return Directions.STOP
+
 
     def get_action(self, state):
         """Given a Pacman game state, returns a legal move.
