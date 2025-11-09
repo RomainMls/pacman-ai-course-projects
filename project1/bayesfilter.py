@@ -51,11 +51,12 @@ class BeliefStateAgent(Agent):
                     continue
                 distance1 = manhattanDistance((i, j), position)
                 weights = []
-                Z = 0
+                z = 0
                 
                 for k, l in neighbors:
                     distance2 = manhattanDistance((k, l), position)
                     # Plus la peur est grande, plus on favorise l'éloignement de pacman
+                    # plus il a peur, plus a de chance de s'éloigner
                     if self.ghost == "fearless":
                         w = 1
                     elif self.ghost == "afraid":
@@ -69,10 +70,11 @@ class BeliefStateAgent(Agent):
                         else:   
                             w = 1
                     weights.append((k, l, w))
-                    Z += w
+                    # diviser par la somme après pour normaliser
+                    z += w
                     
                 for k, l, w in weights:
-                    t[i][j][k][l] = w / Z
+                    t[i][j][k][l] = w / z
         return t
 
     def observation_matrix(self, walls, evidence, position):
