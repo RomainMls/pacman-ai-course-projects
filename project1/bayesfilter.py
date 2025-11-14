@@ -128,7 +128,6 @@ class BeliefStateAgent(Agent):
         o /= sum
         return o
 
-
     def update(self, walls, belief, evidence, position):
         """Updates the previous ghost belief state
 
@@ -192,7 +191,6 @@ class BeliefStateAgent(Agent):
         b_t /= np.sum(b_t)
         return b_t
 
-
     def get_action(self, state):
         """Updates the previous belief states given the current state.
 
@@ -233,7 +231,6 @@ class PacmanAgent(Agent):
     def __init__(self):
         super().__init__()
 
-
     def get_distance(self, walls, start, goal):
         """Returns shortest path distance between start and goal,
         None if unreachable using a bfs algorithm."""
@@ -255,8 +252,6 @@ class PacmanAgent(Agent):
                 if next_legal_pos not in visited:
                     visited.add(next_legal_pos)
                     fringe.push((next_legal_pos, dist + 1))
-
-
 
     def _get_action(self, walls, beliefs, eaten, position):
         """
@@ -327,7 +322,6 @@ class PacmanAgent(Agent):
             return Directions.NORTH
         else:
             return Directions.STOP
-
 
     def get_action(self, state):
         """Given a Pacman game state, returns a legal move.
