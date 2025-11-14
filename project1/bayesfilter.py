@@ -119,13 +119,9 @@ class BeliefStateAgent(Agent):
 
                 if 0 <= z <= n:
                     # Proba d'avoir P(Z=z)
-                    proba = math.comb(n, z) * (p ** z) * ((1 - p) ** (n - z))
-
-                    o[i][j] = proba
-                    sum += proba
+                    o[i][j] = math.comb(n, z) * (p ** z) * ((1 - p) ** (n - z))
 
         # Normalisation pour que la somme de la matrice égale 1
-        o /= sum
         return o
 
     def update(self, walls, belief, evidence, position):
