@@ -49,22 +49,24 @@ class BeliefStateAgent(Agent):
                 distance_prev = manhattanDistance((i, j), position)
                 weighted_actions = []
                 total_weight = 0
-                
+
                 for k, l in Actions.getLegalNeighbors((i, j), walls):
-                    if(k, l) == (i, j):
+                    if (k, l) == (i, j):
                         continue
 
                     distance_next = manhattanDistance((k, l), position)
                     weight = 1
-                    if self.ghost == "afraid" and distance_next > distance_prev:
+                    if (self.ghost == "afraid"
+                            and distance_next > distance_prev):
                         weight = 2
 
-                    elif self.ghost == "terrified" and distance_next > distance_prev:
+                    elif (self.ghost == "terrified"
+                            and distance_next > distance_prev):
                         weight = 8
 
                     weighted_actions.append((k, l, weight))
                     total_weight += weight
-                    
+
                 for (k, l, weight) in weighted_actions:
                     t[i][j][k][l] = weight / total_weight
 
@@ -86,41 +88,46 @@ class BeliefStateAgent(Agent):
         Returns:
             The W x H observation matrix O_t.
         """
-        
+
         # Le principe ici est que plus l'evidence observée est proche de la
-        # distance réelle entre fantome (i, j) et Pacman, 
+        # distance réelle entre fantome (i, j) et Pacman,
         # plus z est proche de np (sa moyenne)
         # Or, la proba P(z) d'une loi bin est max autour de la moyenne
-        # Donc plus z proche de np, 
+        # Donc plus z proche de np,
         #      plus P(z) (et donc P(evidence | distance)) est élevée
         # P(e_t | X_t) doit être max quand e_t = vrai distance(X_t)
         # C'est bien ce qu'on obtient
-        
+
         n = 4
         p = 0.5
         w = walls.width
         h = walls.height
         o = np.zeros((w, h))
-        
+        sum = 0.0
+
         for i in range(w):
             for j in range(h):
                 if walls[i][j]:
                     continue
-                
+
                 distance = manhattanDistance((i, j), position)
-                
-                # On peut calculer z en l'isolant, 
-                # par précaution entier car le combinatoire n'accepte que des entiers
+
+                # On peut calculer z en l'isolant,
+                # par précaution entier car
+                # le combinatoire n'accepte que des entiers
                 z = int(evidence - distance + n * p)
 
                 if 0 <= z <= n:
                     # Proba d'avoir P(Z=z)
-                    o[i][j] = math.comb(n, z) * (p ** z) * ((1 - p) ** (n - z))
+                    proba = math.comb(n, z) * (p ** z) * ((1 - p) ** (n - z))
+
+                    o[i][j] = proba
+                    sum += proba
 
         # Normalisation pour que la somme de la matrice égale 1
-        o /= np.sum(o)
+        o /= sum
         return o
-                
+
 
     def update(self, walls, belief, evidence, position):
         """Updates the previous ghost belief state
@@ -142,7 +149,7 @@ class BeliefStateAgent(Agent):
 
         t = self.transition_matrix(walls, position)
         o = self.observation_matrix(walls, evidence, position)
-        
+
         w = walls.width
         h = walls.height
 
@@ -160,30 +167,31 @@ class BeliefStateAgent(Agent):
                 for j in range(h):
                     if not walls[i][j]:
                         belief[i][j] = 1 / nb_cases
-                        
+
         # 1.Prediction
         prediction = np.zeros((w, h))
         for k in range(w):
             for l in range(h):
 
-                # On calcule la croyance prédite prediction(k, l) = 
-                # somme sur tous les couples (i, j) [P(X_t=(k,l) | X_{t-1}=(i,j)) * b_{t-1}(i, j)]
+                # On calcule la croyance prédite prediction(k, l) =
+                # somme sur tous les couples (i, j)
+                #   [P(X_t=(k,l) | X_{t-1}=(i,j)) * b_{t-1}(i, j)]
                 # (Slide prediction)
                 total_prob = 0
                 for i in range(w):
                     for j in range(h):
-                        total_prob += t[i][j][k][l] * belief[i][j]             
+                        total_prob += t[i][j][k][l] * belief[i][j]
                 prediction[k][l] = total_prob
-        
+
         # 2.Correction (slide bayes filter)
         b_t = np.zeros((w, h))
         for k in range(w):
             for l in range(h):
                 b_t[k][l] = o[k][l] * prediction[k][l]
-        
+
         b_t /= np.sum(b_t)
         return b_t
-                
+
 
     def get_action(self, state):
         """Updates the previous belief states given the current state.
@@ -227,7 +235,8 @@ class PacmanAgent(Agent):
 
 
     def get_distance(self, walls, start, goal):
-        """Returns shortest path distance between start and goal, or None if unreachable using a bfs algorithm."""
+        """Returns shortest path distance between start and goal,
+        None if unreachable using a bfs algorithm."""
         if start == goal:
             return 0
 
@@ -262,29 +271,29 @@ class PacmanAgent(Agent):
         """
         W = walls.width
         H = walls.height
-        closest_ghost = [None, math.inf, None] # Ghost ID, distance, position
+        closest_ghost = [None, math.inf, None]  # Ghost ID, distance, position
         ghost_id_counter = 0
-        
+
         for belief in beliefs:
             if eaten[ghost_id_counter]:
                 ghost_id_counter += 1
                 continue
             max_proba = 0
             ghost_position = (0, 0)
-            
+
             for i in range(W):
                 for j in range(H):
                     if belief[i][j] > max_proba:
                         max_proba = belief[i][j]
                         ghost_position = (i, j)
-                        
+
             distance = self.get_distance(walls, ghost_position, position)
             if distance < closest_ghost[1]:
                 closest_ghost[0] = ghost_id_counter
                 closest_ghost[1] = distance
                 closest_ghost[2] = ghost_position
             ghost_id_counter += 1
-        
+
         legal_moves = Actions.getLegalNeighbors(position, walls)
 
         if not legal_moves:
