@@ -36,47 +36,38 @@ class BeliefStateAgent(Agent):
             the ghost to move from (i, j) to (k, l).
         """
 
-        # L'idée est simple, on va pour chaque position (i, j) regarder les déplacements possibles du fantome (k, l):
-        # il a plus de chance de s'éloigner de pacman vu qu'il veut le fuir 
-        # donc on utilise des poids pour donner de plus grandes proba si le déplacement en (k, l) à partir de (i, j) éloigne le fantome de pacman
-        # on normalise pour obtenir une proba
-        
         w = walls.width
         h = walls.height
         t = np.zeros((w, h, w,  h))
-        
+
+        cnt = 0
         for i in range(w):
             for j in range(h):
                 if walls[i][j]:
                     continue
 
-                neighbors = Actions.getLegalNeighbors((i, j), walls)
-                if len(neighbors) == 0:
-                    continue
-                distance1 = manhattanDistance((i, j), position)
-                weights = []
-                Z = 0
+                distance_prev = manhattanDistance((i, j), position)
+                weighted_actions = []
+                total_weight = 0
                 
-                for k, l in neighbors:
-                    distance2 = manhattanDistance((k, l), position)
-                    # Plus la peur est grande, plus on favorise l'éloignement de pacman
-                    if self.ghost == "fearless":
-                        w = 1
-                    elif self.ghost == "afraid":
-                        if distance1 < distance2:
-                            w = 2
-                        else:
-                            w = 1
-                    elif self.ghost == "terrified":
-                        if distance1 < distance2:
-                            w = 6
-                        else:   
-                            w = 1
-                    weights.append((k, l, w))
-                    Z += w
+                for k, l in Actions.getLegalNeighbors((i, j), walls):
+                    if(k, l) == (i, j):
+                        continue
+
+                    distance_next = manhattanDistance((k, l), position)
+                    weight = 1
+                    if self.ghost == "afraid" and distance_next > distance_prev:
+                        weight = 2
+
+                    elif self.ghost == "terrified" and distance_next > distance_prev:
+                        weight = 8
+
+                    weighted_actions.append((k, l, weight))
+                    total_weight += weight
                     
-                for k, l, w in weights:
-                    t[i][j][k][l] = w / Z
+                for (k, l, weight) in weighted_actions:
+                    t[i][j][k][l] = weight / total_weight
+
         return t
 
     def observation_matrix(self, walls, evidence, position):
