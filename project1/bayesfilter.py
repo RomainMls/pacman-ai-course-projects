@@ -39,18 +39,23 @@ class BeliefStateAgent(Agent):
         w = walls.width
         h = walls.height
         t = np.zeros((w, h, w,  h))
+        # Nous itérons pour chaque position (i, j) et chaque mouvement
+        # du fantôme possible.
+        # On calcule son poids et ensuite normalise par rapport aux
+        # autres mouvement possibles
 
-        cnt = 0
         for i in range(w):
             for j in range(h):
                 if walls[i][j]:
-                    continue
+                    continue  # initial position cannot be a wall
 
                 distance_prev = manhattanDistance((i, j), position)
                 weighted_actions = []
                 total_weight = 0
 
                 for k, l in Actions.getLegalNeighbors((i, j), walls):
+                    # Le phantôme peut choisir la direction d'un mur
+                    # mais l'agent évite ces choix (probabilité nulle)
                     if (k, l) == (i, j):
                         continue
 
@@ -121,7 +126,6 @@ class BeliefStateAgent(Agent):
                     # Proba d'avoir P(Z=z)
                     o[i][j] = math.comb(n, z) * (p ** z) * ((1 - p) ** (n - z))
 
-        # Normalisation pour que la somme de la matrice égale 1
         return o
 
     def update(self, walls, belief, evidence, position):
@@ -176,15 +180,19 @@ class BeliefStateAgent(Agent):
                 for i in range(w):
                     for j in range(h):
                         total_prob += t[i][j][k][l] * belief[i][j]
+
                 prediction[k][l] = total_prob
 
         # 2.Correction (slide bayes filter)
         b_t = np.zeros((w, h))
+        sum = 0.0
         for k in range(w):
             for l in range(h):
-                b_t[k][l] = o[k][l] * prediction[k][l]
+                value = o[k][l] * prediction[k][l]
+                b_t[k][l] = value
+                sum += value
 
-        b_t /= np.sum(b_t)
+        b_t /= sum
         return b_t
 
     def get_action(self, state):
