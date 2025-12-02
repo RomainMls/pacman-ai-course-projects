@@ -77,6 +77,22 @@ class BeliefStateAgent(Agent):
                 for (k, l, weight) in weighted_actions:
                     t[i][j][k][l] = weight / total_weight
 
+                    distance_next = manhattanDistance((k, l), position)
+                    weight = 1
+                    if (self.ghost == "afraid"
+                            and distance_next > distance_prev):
+                        weight = 2
+
+                    elif (self.ghost == "terrified"
+                            and distance_next > distance_prev):
+                        weight = 8
+
+                    weighted_actions.append((k, l, weight))
+                    total_weight += weight
+
+                for (k, l, weight) in weighted_actions:
+                    t[i][j][k][l] = weight / total_weight
+
         return t
 
     def observation_matrix(self, walls, evidence, position):
@@ -105,6 +121,8 @@ class BeliefStateAgent(Agent):
         w = walls.width
         h = walls.height
         o = np.zeros((w, h))
+        sum = 0.0
+
         sum = 0.0
 
         for i in range(w):
@@ -150,6 +168,7 @@ class BeliefStateAgent(Agent):
         t = self.transition_matrix(walls, position)
         o = self.observation_matrix(walls, evidence, position)
 
+
         w = walls.width
         h = walls.height
 
@@ -168,11 +187,15 @@ class BeliefStateAgent(Agent):
                     if not walls[i][j]:
                         belief[i][j] = 1 / nb_cases
 
+
         # 1.Prediction
         prediction = np.zeros((w, h))
         for k in range(w):
             for l in range(h):
 
+                # On calcule la croyance prédite prediction(k, l) =
+                # somme sur tous les couples (i, j)
+                #   [P(X_t=(k,l) | X_{t-1}=(i,j)) * b_{t-1}(i, j)]
                 # On calcule la croyance prédite prediction(k, l) =
                 # somme sur tous les couples (i, j)
                 #   [P(X_t=(k,l) | X_{t-1}=(i,j)) * b_{t-1}(i, j)]
@@ -182,10 +205,14 @@ class BeliefStateAgent(Agent):
                     for j in range(h):
                         total_prob += t[i][j][k][l] * belief[i][j]
 
+                        total_prob += t[i][j][k][l] * belief[i][j]
+
                 prediction[k][l] = total_prob
+
 
         # 2.Correction (slide bayes filter)
         b_t = np.zeros((w, h))
+        sum = 0.0
         sum = 0.0
         for k in range(w):
             for l in range(h):
@@ -238,6 +265,8 @@ class PacmanAgent(Agent):
     def get_distance(self, walls, start, goal):
         """Returns shortest path distance between start and goal,
         None if unreachable using a bfs algorithm."""
+        """Returns shortest path distance between start and goal,
+        None if unreachable using a bfs algorithm."""
         if start == goal:
             return 0
 
@@ -270,6 +299,7 @@ class PacmanAgent(Agent):
         """
         W = walls.width
         H = walls.height
+        closest_ghost = [None, math.inf, None]  # Ghost ID, distance, position
         closest_ghost = [None, math.inf, None]  # Ghost ID, distance, position
         ghost_id_counter = 0
 
