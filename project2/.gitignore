@@ -1,0 +1,11 @@
+/.vscode
+/.idea
+*/__pycache__
+**/__pycache__
+*/.idea
+**/.idea
+
+/env
+/__pycache__
+/pacman_module/__pycache__
+lec7.pdf
