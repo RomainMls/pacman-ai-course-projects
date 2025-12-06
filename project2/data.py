@@ -27,15 +27,33 @@ def state_to_tensor(state: GameState):
     # grodWalls matrice de booléen en vecteur
     # ]
     data = []
-    data.append(state.getPacmanPosition()[0])
-    data.append(state.getPacmanPosition()[1])
+    gridWalls = state.getWalls()
+    width = gridWalls.width
+    height = gridWalls.height
+    
+    pacmanPosition = state.getPacmanPosition()
+    data.append(pacmanPosition[0])
+    data.append(pacmanPosition[1])
     
     #On a qu'un seul fantome énoncé dit ("a smarty ghost")
     ghost = state.getGhostState(1)
     
-    position = ghost.getPosition()
-    data.append(position[0])
-    data.append(position[1])
+    ghostPosition = ghost.getPosition()
+    data.append(ghostPosition[0])
+    data.append(ghostPosition[1])
+    
+    legal = state.getLegalPacmanActions()
+    data.append(1 if "North" in legal else 0)
+    data.append(1 if "South" in legal else 0)
+    data.append(1 if "East" in legal else 0)
+    data.append(1 if "West" in legal else 0)
+    
+    distanceX = ghostPosition[0] - pacmanPosition[0]
+    distanceY = ghostPosition[1] - pacmanPosition[1]
+    data.append(distanceX)
+    data.append(distanceY)
+    data.append(abs(distanceX) + abs(distanceY))
+    data.append((distanceX ** 2 + distanceY ** 2) ** 0.5)
     
     direction = ghost.getDirection() #(0,1) -> North for ex
     directionDict = {
@@ -50,27 +68,25 @@ def state_to_tensor(state: GameState):
     data.append(direction[0])
     data.append(direction[1])
     
-    # isScared = ghost.scaredTimer > 0
-    data.append(ghost.scaredTimer > 0)
-    
+    data.append(ghost.scaredTimer)
     gridFoods = state.getFood()
-    for i in range(0, gridFoods.width):
-        for j in range(0, gridFoods.height):
-            data.append(gridFoods[i][j])
     
     capsulesList = state.getCapsules()        
-    for i in range(0, gridFoods.width):
-        for j in range(0, gridFoods.height):
-            if (i, j) in capsulesList:
-                data.append(1)
+
+    for x in range(-4,5):
+        for y in range(-4,5):
+            newX = pacmanPosition[0] + x
+            newY = pacmanPosition[1] - y
+            if(newX >= 0 and newX < width and newY >= 0 and newY < height):
+                data.append(1 if gridFoods[newX][newY] else 0)    
+                data.append(1 if gridWalls[newX][newY] else 0)
+                data.append(1 if ghostPosition[0] == newX and ghostPosition[1] == newY else 0)
+                data.append(1 if (newX, newY) in capsulesList else 0)
             else:
                 data.append(0)
-        
-    gridWalls = state.getWalls()
-    for i in range(0, gridWalls.width):
-        for j in range(0, gridWalls.height):
-            data.append(gridWalls[i][j])
-            
+                data.append(0)
+                data.append(0)
+                data.append(0)
     return torch.tensor(data, dtype=torch.float32)
 
 

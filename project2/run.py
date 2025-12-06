@@ -16,8 +16,8 @@ np.random.seed(SEED)
 path_to_saved_model = "pacman_model.pth"
 
 # Feel free to add code here depending on your implementation
-D = 391
-hiddens = [512, 256, 128]
+D = 339
+hiddens = [256, 256]
 model = PacmanNetwork(D, hiddens)
 model.load_state_dict(torch.load(path_to_saved_model, map_location="cpu"))
 model.eval()

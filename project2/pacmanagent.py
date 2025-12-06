@@ -28,21 +28,13 @@ class PacmanAgent(Agent):
             state: a GameState object
         """
         
-        actionList = ["North", "South", "East", "West", "Stop"]
+        actionList = ["North", "South", "East", "West"]
                 
         x = state_to_tensor(state).unsqueeze(0)
         with torch.no_grad():
             pred = self.model(x)
             
         logits = pred[0]
-        max = [-math.inf, 0]
-        i = 0
-        for logit in logits:
-            if logit.item() > max[0]:
-                max[0] = logit
-                max[1] = i
-            i += 1
-        
-        actionId = max[1]
+        actionId = torch.argmax(logits).item()
         
         return actionList[actionId]
