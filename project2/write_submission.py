@@ -5,7 +5,8 @@ import pandas as pd
 from data import state_to_tensor
 from architecture import PacmanNetwork
 
-
+# submission.csv containing the action predictions for each game state contained in the pacman_test.pkl file. 
+# The predictions must follow the same order as the states appear in pacman_test.pkl
 class SubmissionWriter:
     def __init__(self, test_set_path, model_path):
         """

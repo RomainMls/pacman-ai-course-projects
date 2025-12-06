@@ -6,6 +6,7 @@ import torch.nn as nn
 from architecture import PacmanNetwork
 from data import PacmanDataset
 
+# containing the training loop of your model
 
 class Pipeline(nn.Module):
     def __init__(self, path):

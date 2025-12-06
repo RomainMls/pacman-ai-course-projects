@@ -3,6 +3,7 @@ from pacman_module.game import Agent
 from data import state_to_tensor
 from train import PacmanDataset
 
+# containing the implementation of an agent whose decisions are based on the predictions of your model
 
 class PacmanAgent(Agent):
     def __init__(self, model):

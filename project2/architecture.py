@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+# containing the implementation of your neural network
 
 class PacmanNetwork(nn.Module):
     """
