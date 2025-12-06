@@ -31,7 +31,7 @@ def state_to_tensor(state: GameState):
     data.append(state.getPacmanPosition()[1])
     
     #On a qu'un seul fantome énoncé dit ("a smarty ghost")
-    ghost = state.getGhostState(0)
+    ghost = state.getGhostState(1)
     
     position = ghost.getPosition()
     data.append(position[0])
@@ -43,7 +43,6 @@ def state_to_tensor(state: GameState):
         "South": (0,-1),
         "East": (1,0),
         "West": (-1, 0),
-        "Stop": (0, 0),
     }
     
     direction = directionDict[direction]
@@ -93,9 +92,12 @@ class PacmanDataset(Dataset):
             x = state_to_tensor(s)
             self.inputs.append(x)
             self.actions.append(a)
+            print(a)
 
     def __len__(self):
         return len(self.inputs)
 
     def __getitem__(self, idx):
         return self.inputs[idx], self.actions[idx]
+
+PacmanDataset("datasets/pacman_dataset.pkl")

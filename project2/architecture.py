@@ -7,10 +7,24 @@ class PacmanNetwork(nn.Module):
     """
     Your neural network architecture.
     """
-    def __init__(self):
+    def __init__(self, D, hiddenDims, activation=nn.ReLU()):
         super().__init__()
-        # Your code here
+        
+        self.mlp = [nn.Linear(D, hiddenDims[0]), activation]
+        
+        for i in range(len(hiddenDims) - 1):
+            self.mlp += [nn.Linear(hiddenDims[i], hiddenDims[i + 1]), activation]
+        
+        # On veut des logits en sortie pas des proba
+        # parce que CrossEntropyLoss() se base sur des logits et pas des proba
+        output_layer = [nn.Linear(hiddenDims[-1], 4)]
+        self.mlp = nn.Sequential(*(self.mlp + output_layer))
+        
+        self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, x):
-        # Your code here
-        return # ...
+        # x est notre vecteur de features
+        
+        pred = self.mlp(x)
+        
+        return pred
