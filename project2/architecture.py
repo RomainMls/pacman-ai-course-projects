@@ -17,11 +17,9 @@ class PacmanNetwork(nn.Module):
         
         # On veut des logits en sortie pas des proba
         # parce que CrossEntropyLoss() se base sur des logits et pas des proba
-        output_layer = [nn.Linear(hiddenDims[-1], 4)]
+        output_layer = [nn.Linear(hiddenDims[-1], 5)]
         self.mlp = nn.Sequential(*(self.mlp + output_layer))
         
-        self.criterion = nn.CrossEntropyLoss()
-
     def forward(self, x):
         # x est notre vecteur de features
         

@@ -43,6 +43,7 @@ def state_to_tensor(state: GameState):
         "South": (0,-1),
         "East": (1,0),
         "West": (-1, 0),
+        "Stop": (0, 0),
     }
     
     direction = directionDict[direction]
@@ -70,7 +71,7 @@ def state_to_tensor(state: GameState):
         for j in range(0, gridWalls.height):
             data.append(gridWalls[i][j])
             
-    return torch.tensor(data)
+    return torch.tensor(data, dtype=torch.float32)
 
 
 class PacmanDataset(Dataset):
@@ -92,12 +93,9 @@ class PacmanDataset(Dataset):
             x = state_to_tensor(s)
             self.inputs.append(x)
             self.actions.append(a)
-            print(a)
 
     def __len__(self):
         return len(self.inputs)
 
     def __getitem__(self, idx):
         return self.inputs[idx], self.actions[idx]
-
-PacmanDataset("datasets/pacman_dataset.pkl")
