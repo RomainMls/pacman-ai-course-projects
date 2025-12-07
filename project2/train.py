@@ -25,7 +25,7 @@ class Pipeline(nn.Module):
         dataset = PacmanDataset(self.path)
         
         n = len(dataset)
-        nTrain = int(0.8 * n)
+        nTrain = int(0.9 * n)
         nTest = n - nTrain
         
         D = len(dataset.inputs[0])
@@ -34,7 +34,7 @@ class Pipeline(nn.Module):
         
         self.batchSize = 128
         
-        self.epochs = 48
+        self.epochs = 42
         self.show_every = 40
         
         self.train_loader = DataLoader(self.dataset, batch_size=self.batchSize, shuffle=True)
@@ -62,6 +62,9 @@ class Pipeline(nn.Module):
         }
         
         losses = []
+        self.bestAccuracy = 0
+        self.trainingAccuracy = 0
+        
         self.model.train()
         for epoch in range(self.epochs):
             for featuresVector, action in self.train_loader:
@@ -78,7 +81,18 @@ class Pipeline(nn.Module):
                 self.optimizer.step()
                 
                 losses.append(loss.item())
+            
+            trainAccuracy = self.evaluate(self.train_loader)
+            testAccuracy = self.evaluate(self.test_loader)
+            print(f"Epoch {epoch}, TrainAccuracy = {trainAccuracy:.4f} and testAccuracy = {testAccuracy:.4f}")
 
+            if testAccuracy > self.bestAccuracy:
+                self.bestAccuracy = testAccuracy
+                self.trainingAccuracy = trainAccuracy
+
+        torch.save(self.model.state_dict(), "pacman_model.pth")
+        print("Model saved !")
+                    
         plt.plot(losses)
         plt.title(f"After epoch {epoch}")
         plt.ylabel("Loss")
@@ -86,9 +100,6 @@ class Pipeline(nn.Module):
         plt.xscale("log")
         plt.grid()
         plt.show()
-
-        torch.save(self.model.state_dict(), "pacman_model.pth")
-        print("Model saved !")
         
     def evaluate(self, loader):
         actionDict = {
@@ -115,13 +126,13 @@ class Pipeline(nn.Module):
                         correct += 1
                     total += 1
                     i += 1
+    
         return correct/total
 
 if __name__ == "__main__":
     pipeline = Pipeline(path="datasets/pacman_dataset.pkl")
     pipeline.train()
-    accuracy = pipeline.evaluate(pipeline.train_loader)
-    print("Training accuracy:", accuracy)
+
+    print("Training accuracy:", pipeline.trainingAccuracy)
+    print("Testing accuracy:", pipeline.bestAccuracy)
     
-    accuracy = pipeline.evaluate(pipeline.test_loader)
-    print("Testing accuracy:", accuracy)

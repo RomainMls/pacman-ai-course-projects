@@ -10,7 +10,7 @@ class PacmanNetwork(nn.Module):
     def __init__(self, D, hiddenDims, activation=nn.ReLU()):
         super().__init__()
         
-        dropout = 0.3
+        dropout = 0.1
         self.mlp = [nn.Linear(D, hiddenDims[0]), activation, nn.Dropout(dropout)]
         
         for i in range(len(hiddenDims) - 1):
