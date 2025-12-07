@@ -34,7 +34,7 @@ class Pipeline(nn.Module):
         
         self.batchSize = 128
         
-        self.epochs = 42
+        self.epochs = 38
         self.show_every = 40
         
         self.train_loader = DataLoader(self.dataset, batch_size=self.batchSize, shuffle=True)
@@ -48,7 +48,7 @@ class Pipeline(nn.Module):
         
         # Learning rate choisit pour que l'entrainement soit stable
         # et pas trop lent et pour pouvoir sortir des minimums locaux
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=7e-4)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=1e-3)
 
     def train(self):
         print("Beginning of the training of your network...")
@@ -90,8 +90,8 @@ class Pipeline(nn.Module):
                 self.bestAccuracy = testAccuracy
                 self.trainingAccuracy = trainAccuracy
 
-        torch.save(self.model.state_dict(), "pacman_model.pth")
-        print("Model saved !")
+                torch.save(self.model.state_dict(), "pacman_model.pth")
+                print("Model saved !")
                     
         plt.plot(losses)
         plt.title(f"After epoch {epoch}")

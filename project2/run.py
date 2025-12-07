@@ -16,7 +16,7 @@ np.random.seed(SEED)
 path_to_saved_model = "pacman_model.pth"
 
 # Feel free to add code here depending on your implementation
-D = 929
+D = 920
 hiddens = [256, 256]
 model = PacmanNetwork(D, hiddens)
 model.load_state_dict(torch.load(path_to_saved_model, map_location="cpu"))
@@ -25,7 +25,7 @@ model.eval()
 pacman_agent = PacmanAgent(model)
 
 score, elapsed_time, nodes = runGame(
-    layout_name="large_filter",
+    layout_name="large_filter_walls",
     pacman=pacman_agent,
     ghosts=[SmartyGhost(1)],
     beliefstateagent=None,

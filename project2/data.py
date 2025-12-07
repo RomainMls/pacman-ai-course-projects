@@ -43,13 +43,6 @@ def state_to_tensor(state: GameState):
     data.append(ghostPosition[0] / width)
     data.append(ghostPosition[1] / height)
     
-    legal = state.getLegalPacmanActions()
-    data.append(len(legal) / 4)
-    data.append(1 if "North" in legal else 0)
-    data.append(1 if "South" in legal else 0)
-    data.append(1 if "East" in legal else 0)
-    data.append(1 if "West" in legal else 0)
-    
     distanceX = ghostPosition[0] - pacmanPosition[0]
     distanceY = ghostPosition[1] - pacmanPosition[1]
     data.append(distanceX / width)
@@ -73,12 +66,6 @@ def state_to_tensor(state: GameState):
     data.append(direction[1])
     # Cul de sac
     data.append(is_dead_end(state, pacmanPosition))
-    
-    # Position du fantome par rapport à Pacman
-    data.append(1 if ghostPosition[0] < pacmanPosition[0] else 0)
-    data.append(1 if ghostPosition[0] > pacmanPosition[0] else 0)
-    data.append(1 if ghostPosition[1] < pacmanPosition[1] else 0)
-    data.append(1 if ghostPosition[1] > pacmanPosition[1] else 0)
     
     data.append(ghost.scaredTimer)
     
@@ -127,8 +114,8 @@ def state_to_tensor(state: GameState):
     
     data.append(minDist / MAX_DIST)
     if(index != -1):
-        data.append(capsulesList[index][0] - pacmanPosition[0])
-        data.append(capsulesList[index][1] - pacmanPosition[1])
+        data.append((capsulesList[index][0] - pacmanPosition[0]) / width)
+        data.append((capsulesList[index][1] - pacmanPosition[1]) / height)
     else:
         data.append(0)
         data.append(0)
