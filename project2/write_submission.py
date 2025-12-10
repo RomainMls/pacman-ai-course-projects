@@ -6,8 +6,12 @@ from data import state_to_tensor
 from architecture import PacmanNetwork
 import math
 
-# submission.csv containing the action predictions for each game state contained in the pacman_test.pkl file. 
-# The predictions must follow the same order as the states appear in pacman_test.pkl
+# submission.csv containing the action predictions for each game
+# state contained in the pacman_test.pkl file.
+# The predictions must follow the same order as
+# the states appear in pacman_test.pkl
+
+
 class SubmissionWriter:
     def __init__(self, test_set_path, model_path):
         """
@@ -27,7 +31,6 @@ class SubmissionWriter:
         self.model.load_state_dict(torch.load(model_path, map_location="cpu"))
         self.model.eval()
 
-
     def predict_on_testset(self):
         """
         Generate predictions for the test set.
@@ -35,7 +38,7 @@ class SubmissionWriter:
         !!! Your predicted actions should follow the same order
         as the test set provided.
         """
-        
+
         actionList = ["North", "South", "East", "West"]
 
         actions = []
@@ -43,10 +46,10 @@ class SubmissionWriter:
             x = state_to_tensor(state).unsqueeze(0)
             with torch.no_grad():
                 pred = self.model(x)
-            
+
             logits = pred[0]
             actionId = torch.argmax(logits).item()
-        
+
             actions.append(actionList[actionId])
         return actions
 

@@ -5,7 +5,9 @@ from train import PacmanDataset
 import math
 import torch
 
-# containing the implementation of an agent whose decisions are based on the predictions of your model
+# containing the implementation of an agent whose decisions
+# are based on the predictions of your model
+
 
 class PacmanAgent(Agent):
     def __init__(self, model):
@@ -27,14 +29,14 @@ class PacmanAgent(Agent):
         Arguments:
             state: a GameState object
         """
-        
+
         actionList = ["North", "South", "East", "West"]
-                
+
         x = state_to_tensor(state).unsqueeze(0)
         with torch.no_grad():
             pred = self.model(x)
-            
+
         logits = pred[0]
         actionId = torch.argmax(logits).item()
-        
+
         return actionList[actionId]
